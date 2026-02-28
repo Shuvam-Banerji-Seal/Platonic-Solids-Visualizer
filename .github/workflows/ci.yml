@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install html5validator
+        run: pip install html5validator
+
+      - name: Validate HTML
+        run: html5validator --root . --also-check-css --log INFO
+
+      - name: Check for broken internal links
+        run: |
+          status=0
+          for file in $(find . -name '*.html' -not -path './.git/*'); do
+            dir=$(dirname "$file")
+            while IFS= read -r link; do
+              case "$link" in
+                http://*|https://*|mailto:*|javascript:*|'#'*|\{\{*) continue ;;
+              esac
+              target="$dir/$link"
+              target="${target%%#*}"
+              if [ -n "$target" ] && [ ! -f "$target" ] && [ ! -d "$target" ]; then
+                echo "Broken link in $file: $link (resolved: $target)"
+                status=1
+              fi
+            done < <(grep -oP 'href="\K[^"]+' "$file" || true)
+          done
+          exit $status
+
+      - name: Basic syntax check
+        run: |
+          for file in $(find . -name '*.html' -not -path './.git/*'); do
+            if ! grep -q '<html' "$file"; then
+              echo "WARNING: $file may not be a complete HTML document"
+            fi
+            if ! grep -q '<body' "$file"; then
+              echo "WARNING: $file may be missing a <body> section"
+            fi
+          done
+          echo "Syntax check complete."

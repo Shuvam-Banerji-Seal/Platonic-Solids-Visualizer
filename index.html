@@ -201,9 +201,63 @@
         /* Specific Visualization Hints */
         .hint { font-size: 0.8rem; color: var(--accent-hover); font-style: italic; margin-top: 5px; }
 
+        .derivations-link {
+            display: inline-block;
+            margin-top: 14px;
+            padding: 6px 14px;
+            background: rgba(79,172,254,0.12);
+            border: 1px solid rgba(79,172,254,0.3);
+            border-radius: 8px;
+            color: #4facfe;
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: background 0.2s;
+        }
+        .derivations-link:hover { background: rgba(79,172,254,0.25); }
+
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            z-index: 200;
+            width: 44px;
+            height: 44px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: var(--panel-bg);
+            color: var(--text-color);
+            font-size: 1.4rem;
+            border-radius: 10px;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(12px);
+            touch-action: manipulation;
+        }
+        #menuBtn { top: 15px; left: 15px; }
+        #infoBtn { top: 15px; right: 15px; }
+
+        .mobile-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 50;
+        }
+        .mobile-overlay.active { display: block; }
+
         @media (max-width: 768px) {
-            #controls { top: auto; bottom: 10px; left: 10px; right: 10px; width: auto; max-height: 40vh; }
-            #info { top: 10px; left: 10px; right: 10px; max-height: 40vh; width: auto; }
+            .mobile-toggle { display: flex !important; }
+            #controls {
+                position: fixed; left: -320px; top: 0; bottom: 0; width: 300px;
+                max-height: 100vh; border-radius: 0; transition: left 0.3s ease;
+                z-index: 100;
+            }
+            #controls.open { left: 0; }
+            #info {
+                position: fixed; right: -340px; top: 0; bottom: 0; width: 320px;
+                max-height: 100vh; border-radius: 0; transition: right 0.3s ease;
+                z-index: 100;
+            }
+            #info.open { right: 0; }
         }
     </style>
     <script type="importmap">
@@ -216,6 +270,10 @@
     </script>
 </head>
 <body>
+
+    <button class="mobile-toggle" id="menuBtn" aria-label="Toggle menu">☰</button>
+    <button class="mobile-toggle" id="infoBtn" aria-label="Toggle info">ℹ</button>
+    <div class="mobile-overlay" id="mobileOverlay"></div>
 
     <div id="canvas-container"></div>
 
@@ -232,11 +290,19 @@
         <div id="panel-solid" class="control-panel active">
             <label for="shapeSelect">Select Solid:</label>
             <select id="shapeSelect">
+                <optgroup label="Platonic Solids">
                 <option value="tetrahedron">Tetrahedron</option>
                 <option value="cube" selected>Cube</option>
                 <option value="octahedron">Octahedron</option>
                 <option value="dodecahedron">Dodecahedron</option>
                 <option value="icosahedron">Icosahedron</option>
+                </optgroup>
+                <optgroup label="Kepler-Poinsot Polyhedra">
+                <option value="smallStellatedDodecahedron">Small Stellated Dodecahedron</option>
+                <option value="greatDodecahedron">Great Dodecahedron</option>
+                <option value="greatStellatedDodecahedron">Great Stellated Dodecahedron</option>
+                <option value="greatIcosahedron">Great Icosahedron</option>
+                </optgroup>
             </select>
 
             <div class="toggle-group">
@@ -248,6 +314,30 @@
             <div class="toggle-group">
                 <div class="checkbox-wrapper"><label>Auto Rotate</label><input type="checkbox" id="autoRotate" checked></div>
             </div>
+
+            <h3>Animations</h3>
+            <div class="toggle-group">
+                <div class="checkbox-wrapper"><label>Pulse</label><input type="checkbox" id="animPulse"></div>
+                <div class="checkbox-wrapper"><label>Color Cycle</label><input type="checkbox" id="animColorCycle"></div>
+            </div>
+
+            <label for="colorTheme">Color Theme:</label>
+            <select id="colorTheme">
+                <option value="#4facfe">Cosmic Blue</option>
+                <option value="#00ff88">Emerald Green</option>
+                <option value="#ffd700">Solar Gold</option>
+                <option value="#ff4444">Ruby Red</option>
+                <option value="#9b59b6">Amethyst Purple</option>
+                <option value="#ff6b35">Sunset Orange</option>
+            </select>
+
+            <label for="bgTheme">Background:</label>
+            <select id="bgTheme">
+                <option value="#121212">Dark</option>
+                <option value="#0a0a2e">Midnight</option>
+                <option value="#000011">Deep Space</option>
+                <option value="#1a1a2e">Charcoal</option>
+            </select>
         </div>
 
         <!-- PROOF MODE CONTROLS -->
@@ -265,7 +355,7 @@
         <div id="panel-ops" class="control-panel">
             <label for="opSelect">Operation Type:</label>
             <select id="opSelect">
-                <option value="rotate">Rotation (C<sub>n</sub>)</option>
+                <option value="rotate">Rotation (Cₙ)</option>
                 <option value="reflect">Reflection (&sigma;)</option>
                 <option value="invert">Inversion (i)</option>
             </select>
@@ -318,6 +408,7 @@
                 <div class="data-item"><span class="data-val" id="valVertices">8</span><span class="data-label">Vertices</span></div>
                 <div class="data-item"><span class="data-val" id="valEdges">12</span><span class="data-label">Edges</span></div>
                 <div class="data-item"><span class="data-val" id="valAxes">0</span><span class="data-label">Axes</span></div>
+                <div class="data-item"><span class="data-val" id="valSchlafli">{4, 3}</span><span class="data-label">Schläfli Symbol</span></div>
             </div>
             <div id="eulerDisplay" style="font-size: 0.85rem; color:#888;"></div>
             <br>
@@ -326,6 +417,7 @@
             <div class="legend-item"><div class="color-dot" style="background:magenta"></div> <span>Threefold Axis</span></div>
             <div class="legend-item"><div class="color-dot" style="background:cyan"></div> <span>Twofold Axis</span></div>
             <div class="legend-item"><div class="color-dot" style="background:#0f0"></div> <span>Fivefold Axis</span></div>
+            <a href="docs/derivations.html" target="_blank" class="derivations-link">📐 Mathematical Derivations</a>
         </div>
 
         <div id="info-proof" class="control-panel">
@@ -352,6 +444,7 @@
     <script type="module">
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { ConvexGeometry } from 'three/addons/geometries/ConvexGeometry.js';
 
         // --- Global State ---
         const state = {
@@ -364,6 +457,8 @@
             vertices: true,
             axes: false,
             autoRotate: true,
+            pulse: false,
+            colorCycle: false,
 
             // Proof Mode
             proofN: 3,
@@ -381,11 +476,15 @@
         };
 
         const metadata = {
-            tetrahedron: { name: "Tetrahedron", f: 4, v: 4, e: 6 },
-            cube: { name: "Cube", f: 6, v: 8, e: 12 },
-            octahedron: { name: "Octahedron", f: 8, v: 6, e: 12 },
-            dodecahedron: { name: "Dodecahedron", f: 12, v: 20, e: 30 },
-            icosahedron: { name: "Icosahedron", f: 20, v: 12, e: 30 }
+            tetrahedron: { name: "Tetrahedron", f: 4, v: 4, e: 6, schlafli: "{3, 3}" },
+            cube: { name: "Cube", f: 6, v: 8, e: 12, schlafli: "{4, 3}" },
+            octahedron: { name: "Octahedron", f: 8, v: 6, e: 12, schlafli: "{3, 4}" },
+            dodecahedron: { name: "Dodecahedron", f: 12, v: 20, e: 30, schlafli: "{5, 3}" },
+            icosahedron: { name: "Icosahedron", f: 20, v: 12, e: 30, schlafli: "{3, 5}" },
+            smallStellatedDodecahedron: { name: "Small Stellated Dodecahedron", f: 12, v: 12, e: 30, schlafli: "{5/2, 5}" },
+            greatDodecahedron: { name: "Great Dodecahedron", f: 12, v: 12, e: 30, schlafli: "{5, 5/2}" },
+            greatStellatedDodecahedron: { name: "Great Stellated Dodecahedron", f: 12, v: 20, e: 30, schlafli: "{5/2, 3}" },
+            greatIcosahedron: { name: "Great Icosahedron", f: 20, v: 12, e: 30, schlafli: "{3, 5/2}" },
         };
 
         // --- Scene Setup ---
@@ -446,6 +545,25 @@
         const matGhostVert = new THREE.PointsMaterial({ color: 0x00ff88, size: 0.08, sizeAttenuation: true });
 
         // --- Core Geometry Logic ---
+        function createStellatedGeometry(baseGeo, scaleFactor) {
+            const verts = getUniqueVertices(baseGeo);
+            const nonIdx = baseGeo.clone().toNonIndexed().attributes.position;
+            for (let i = 0; i < nonIdx.count; i += 3) {
+                const a = new THREE.Vector3().fromBufferAttribute(nonIdx, i);
+                const b = new THREE.Vector3().fromBufferAttribute(nonIdx, i+1);
+                const c = new THREE.Vector3().fromBufferAttribute(nonIdx, i+2);
+                const center = new THREE.Vector3().addVectors(a,b).add(c).divideScalar(3);
+                verts.push(center.normalize().multiplyScalar(1.5 * scaleFactor));
+            }
+            const unique = [];
+            const seen = new Set();
+            verts.forEach(v => {
+                const k = `${v.x.toFixed(2)},${v.y.toFixed(2)},${v.z.toFixed(2)}`;
+                if (!seen.has(k)) { seen.add(k); unique.push(v); }
+            });
+            return new ConvexGeometry(unique);
+        }
+
         function createGeometry(type) {
             switch(type) {
                 case 'tetrahedron': return new THREE.TetrahedronGeometry(1.5);
@@ -453,6 +571,14 @@
                 case 'octahedron': return new THREE.OctahedronGeometry(1.5);
                 case 'dodecahedron': return new THREE.DodecahedronGeometry(1.5);
                 case 'icosahedron': return new THREE.IcosahedronGeometry(1.5);
+                case 'smallStellatedDodecahedron':
+                    return createStellatedGeometry(new THREE.DodecahedronGeometry(1.5), 1.618);
+                case 'greatDodecahedron':
+                    return createStellatedGeometry(new THREE.IcosahedronGeometry(1.5), 1.35);
+                case 'greatStellatedDodecahedron':
+                    return createStellatedGeometry(new THREE.IcosahedronGeometry(1.5), 2.618);
+                case 'greatIcosahedron':
+                    return createStellatedGeometry(new THREE.DodecahedronGeometry(1.5), 2.0);
                 default: return new THREE.BoxGeometry(1,1,1);
             }
         }
@@ -582,6 +708,7 @@
                 document.getElementById('valVertices').innerText = meta.v;
                 document.getElementById('valEdges').innerText = meta.e;
                 document.getElementById('eulerDisplay').innerText = `Euler: ${meta.v} - ${meta.e} + ${meta.f} = 2`;
+                document.getElementById('valSchlafli').innerText = meta.schlafli;
             }
         }
 
@@ -882,6 +1009,17 @@
         document.getElementById('showVertices').addEventListener('change', (e) => { state.vertices = e.target.checked; updateScene(); });
         document.getElementById('showAxes').addEventListener('change', (e) => { state.axes = e.target.checked; updateScene(); });
         document.getElementById('autoRotate').addEventListener('change', (e) => { state.autoRotate = e.target.checked; });
+        document.getElementById('animPulse').addEventListener('change', (e) => { state.pulse = e.target.checked; });
+        document.getElementById('animColorCycle').addEventListener('change', (e) => { state.colorCycle = e.target.checked; });
+        document.getElementById('colorTheme').addEventListener('change', (e) => {
+            matSolid.color.set(e.target.value);
+        });
+        document.getElementById('bgTheme').addEventListener('change', (e) => {
+            const color = new THREE.Color(e.target.value);
+            scene.background = color;
+            scene.fog = new THREE.FogExp2(color, 0.02);
+            document.documentElement.style.setProperty('--bg-color', e.target.value);
+        });
 
         // Proof
         document.getElementById('proofSlider').addEventListener('input', (e) => { 
@@ -942,12 +1080,50 @@
             document.getElementById('invProgressVal').innerText = state.invProgress + "%";
         });
 
+        // Mobile Panel Toggles
+        const menuBtn = document.getElementById('menuBtn');
+        const infoBtn = document.getElementById('infoBtn');
+        const overlay = document.getElementById('mobileOverlay');
+
+        function closeMobilePanels() {
+            document.getElementById('controls').classList.remove('open');
+            document.getElementById('info').classList.remove('open');
+            overlay.classList.remove('active');
+        }
+
+        menuBtn.addEventListener('click', () => {
+            const ctrl = document.getElementById('controls');
+            const isOpen = ctrl.classList.toggle('open');
+            document.getElementById('info').classList.remove('open');
+            overlay.classList.toggle('active', isOpen);
+        });
+
+        infoBtn.addEventListener('click', () => {
+            const info = document.getElementById('info');
+            const isOpen = info.classList.toggle('open');
+            document.getElementById('controls').classList.remove('open');
+            overlay.classList.toggle('active', isOpen);
+        });
+
+        overlay.addEventListener('click', closeMobilePanels);
+
         // --- Main Loop ---
         function animate() {
             requestAnimationFrame(animate);
             if(state.mode === 'solid' && state.autoRotate) {
                 scene.rotation.y += 0.005;
                 scene.rotation.x += 0.002;
+            }
+            if (state.pulse) {
+                const scale = 1 + 0.05 * Math.sin(Date.now() * 0.003);
+                mainGroup.scale.set(scale, scale, scale);
+            } else {
+                const invertActive = state.mode === 'ops' && state.opType === 'invert';
+                if (!invertActive) mainGroup.scale.set(1, 1, 1);
+            }
+            if (state.colorCycle) {
+                const hue = (Date.now() * 0.0001) % 1;
+                matSolid.color.setHSL(hue, 0.7, 0.5);
             }
             animateOps();
             controls.update();

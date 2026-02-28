@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mathematical Derivations — Platonic Solids &amp; Kepler-Poinsot Polyhedra</title>
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']] },
+            options: { skipHtmlTags: ['script','noscript','style','textarea','pre'] }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --surface: #1a1a1f;
+            --text-color: #e0e0e0;
+            --accent: #4facfe;
+            --accent-hover: #00f2fe;
+            --muted: #888;
+            --border: rgba(255,255,255,0.1);
+        }
+        *, *::before, *::after { box-sizing: border-box; }
+        body, html {
+            margin: 0; padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.7;
+        }
+        .page-wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+        nav.toc {
+            position: sticky; top: 0;
+            width: 260px; min-width: 200px;
+            height: 100vh;
+            overflow-y: auto;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            padding: 24px 16px;
+            flex-shrink: 0;
+        }
+        nav.toc h3 {
+            margin: 0 0 16px 0;
+            color: var(--accent);
+            font-weight: 400;
+            letter-spacing: 1px;
+        }
+        nav.toc a {
+            display: block;
+            padding: 5px 10px;
+            margin-bottom: 3px;
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.88rem;
+            border-radius: 6px;
+            transition: background 0.2s, color 0.2s;
+        }
+        nav.toc a:hover { background: rgba(79,172,254,0.1); color: var(--accent); }
+        nav.toc a.sub { padding-left: 24px; font-size: 0.82rem; }
+        nav.toc .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: var(--accent);
+            font-size: 0.85rem;
+        }
+        main {
+            flex: 1;
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 40px 32px 80px;
+        }
+        h1 {
+            color: var(--accent);
+            font-weight: 300;
+            font-size: 2rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+        }
+        h1 + p { color: var(--muted); margin-top: -8px; }
+        h2 {
+            color: var(--accent-hover);
+            font-weight: 400;
+            margin-top: 48px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 8px;
+        }
+        h3 { color: var(--accent); font-weight: 400; margin-top: 32px; }
+        .math-block {
+            overflow-x: auto;
+            padding: 12px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+        }
+        th, td {
+            padding: 8px 12px;
+            border: 1px solid #333;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        th { background: rgba(79,172,254,0.1); color: var(--accent); }
+        details {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0;
+            margin: 12px 0;
+        }
+        summary {
+            padding: 12px 16px;
+            cursor: pointer;
+            color: var(--accent);
+            font-weight: 500;
+        }
+        summary:hover { background: rgba(79,172,254,0.05); }
+        details > div { padding: 0 16px 16px; }
+        code {
+            background: rgba(255,255,255,0.06);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.88em;
+        }
+        @media (max-width: 768px) {
+            nav.toc { display: none; }
+            main { padding: 20px 16px 60px; }
+        }
+    </style>
+</head>
+<body>
+<div class="page-wrapper">
+    <nav class="toc">
+        <a href="../index.html" class="back-link">&#8592; Back to Visualizer</a>
+        <h3>Table of Contents</h3>
+        <a href="#introduction">1. Introduction</a>
+        <a href="#classification">2. Classification Proof</a>
+        <a href="#symmetry">3. Symmetry Groups</a>
+        <a href="#sym-tetra" class="sub">Tetrahedron (T<sub>d</sub>)</a>
+        <a href="#sym-cube" class="sub">Cube / Octahedron (O<sub>h</sub>)</a>
+        <a href="#sym-dodeca" class="sub">Dodecahedron / Icosahedron (I<sub>h</sub>)</a>
+        <a href="#sym-kp" class="sub">Kepler-Poinsot</a>
+        <a href="#euler">4. Euler's Formula</a>
+        <a href="#coordinates">5. Vertex Coordinates</a>
+    </nav>
+
+    <main>
+        <h1>Mathematical Derivations</h1>
+        <p>Symmetry elements of Platonic solids and Kepler-Poinsot polyhedra</p>
+
+        <!-- ================================================================ -->
+        <!-- 1. Introduction -->
+        <!-- ================================================================ -->
+        <h2 id="introduction">1. Introduction to Regular Polyhedra</h2>
+
+        <p>A <strong>regular polyhedron</strong> is a three-dimensional solid whose faces are all congruent regular polygons, with the same number of faces meeting at every vertex. Each is uniquely classified by its <strong>Schl&auml;fli symbol</strong> \(\{p,\,q\}\), where:</p>
+        <ul>
+            <li>every face is a regular \(p\)-gon, and</li>
+            <li>exactly \(q\) faces meet at each vertex.</li>
+        </ul>
+
+        <h3>The Angle-Defect Argument</h3>
+        <p>At each vertex of a convex polyhedron, the sum of the face angles must be <em>strictly less</em> than \(2\pi\). The interior angle of a regular \(p\)-gon is:</p>
+        <div class="math-block">
+        \[
+            \alpha \;=\; \frac{(p-2)\,\pi}{p}
+        \]
+        </div>
+        <p>Since \(q\) such angles meet at each vertex, the convexity constraint reads:</p>
+        <div class="math-block">
+        \[
+            q\,\alpha \;\lt\; 2\pi
+            \qquad\Longrightarrow\qquad
+            \frac{q\,(p-2)}{p} \;\lt\; 2
+        \]
+        </div>
+        <p>The positive difference \(2\pi - q\alpha\) is called the <strong>angle defect</strong> at the vertex. By Descartes' theorem, the total angle defect summed over all vertices of any convex polyhedron equals \(4\pi\), providing a deep link between local geometry and global topology.</p>
+
+        <!-- ================================================================ -->
+        <!-- 2. Classification -->
+        <!-- ================================================================ -->
+        <h2 id="classification">2. Classification Proof</h2>
+
+        <h3>Convex regular polyhedra</h3>
+        <p>Rearranging the constraint above:</p>
+        <div class="math-block">
+        \[
+            \frac{q(p-2)}{p} \lt 2
+            \;\;\Longrightarrow\;\;
+            q(p-2) \lt 2p
+            \;\;\Longrightarrow\;\;
+            qp - 2q \lt 2p
+            \;\;\Longrightarrow\;\;
+            qp - 2q - 2p \lt 0
+        \]
+        </div>
+        <p>Adding 4 to both sides:</p>
+        <div class="math-block">
+        \[
+            (p-2)(q-2) \lt 4
+        \]
+        </div>
+        <p>Since \(p \ge 3\) and \(q \ge 3\) (every face has at least 3 sides, at least 3 faces meet at a vertex), we enumerate all integer solutions:</p>
+
+        <table>
+            <thead>
+                <tr><th>\(p\)</th><th>\(q\)</th><th>\((p{-}2)(q{-}2)\)</th><th>Solid</th><th>Schl&auml;fli</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>3</td><td>3</td><td>1</td><td>Tetrahedron</td><td>\(\{3,3\}\)</td></tr>
+                <tr><td>3</td><td>4</td><td>2</td><td>Octahedron</td><td>\(\{3,4\}\)</td></tr>
+                <tr><td>4</td><td>3</td><td>2</td><td>Cube</td><td>\(\{4,3\}\)</td></tr>
+                <tr><td>3</td><td>5</td><td>3</td><td>Icosahedron</td><td>\(\{3,5\}\)</td></tr>
+                <tr><td>5</td><td>3</td><td>3</td><td>Dodecahedron</td><td>\(\{5,3\}\)</td></tr>
+            </tbody>
+        </table>
+        <p>No other pairs \((p,q)\) with \(p,q \ge 3\) satisfy \((p{-}2)(q{-}2) \lt 4\). This completes the proof that exactly <strong>five</strong> convex regular polyhedra exist.</p>
+
+        <h3>Kepler-Poinsot star polyhedra</h3>
+        <p>If we allow <em>star polygons</em> as faces (Schl&auml;fli symbol \(\{p/d\}\), where \(d\) counts how many vertices are skipped when connecting), we obtain four additional regular polyhedra:</p>
+        <table>
+            <thead><tr><th>Schl&auml;fli</th><th>Name</th><th>\(V\)</th><th>\(E\)</th><th>\(F\)</th></tr></thead>
+            <tbody>
+                <tr><td>\(\{5/2,\,5\}\)</td><td>Small stellated dodecahedron</td><td>12</td><td>30</td><td>12</td></tr>
+                <tr><td>\(\{5,\,5/2\}\)</td><td>Great dodecahedron</td><td>12</td><td>30</td><td>12</td></tr>
+                <tr><td>\(\{5/2,\,3\}\)</td><td>Great stellated dodecahedron</td><td>20</td><td>30</td><td>12</td></tr>
+                <tr><td>\(\{3,\,5/2\}\)</td><td>Great icosahedron</td><td>12</td><td>30</td><td>20</td></tr>
+            </tbody>
+        </table>
+        <p>Cauchy (1813) proved these are the <em>only</em> non-convex regular polyhedra, completing the classification to exactly <strong>nine</strong> regular polyhedra in total.</p>
+
+        <!-- ================================================================ -->
+        <!-- 3. Symmetry Groups -->
+        <!-- ================================================================ -->
+        <h2 id="symmetry">3. Symmetry Group Analysis</h2>
+
+        <h3 id="sym-tetra">Tetrahedron &mdash; T<sub>d</sub> (order 24)</h3>
+        <p>The full symmetry group T<sub>d</sub> has 24 elements. The <strong>rotation subgroup</strong> T has order 12:</p>
+        <table>
+            <thead><tr><th>Operation</th><th>Count</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td>\(E\)</td><td>1</td><td>Identity</td></tr>
+                <tr><td>\(C_3,\, C_3^2\)</td><td>8</td><td>Four \(C_3\) axes (vertex &#8594; opposite face centre), each with \(C_3\) and \(C_3^2\)</td></tr>
+                <tr><td>\(C_2\)</td><td>3</td><td>Three \(C_2\) axes (edge midpoint &#8594; opposite edge midpoint)</td></tr>
+            </tbody>
+        </table>
+        <p>Total rotations: \(1 + 8 + 3 = 12\). Adding 6 mirror planes \(\sigma_d\) and 6 improper rotations \(S_4\) doubles the count to 24.</p>
+
+        <h3 id="sym-cube">Cube / Octahedron &mdash; O<sub>h</sub> (order 48)</h3>
+        <p>The cube and octahedron are <em>duals</em> and share the same symmetry group O<sub>h</sub>. The rotation subgroup O has order 24:</p>
+        <table>
+            <thead><tr><th>Operation</th><th>Count</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td>\(E\)</td><td>1</td><td>Identity</td></tr>
+                <tr><td>\(C_4,\, C_4^3\)</td><td>6</td><td>Three \(C_4\) axes through opposite face centres</td></tr>
+                <tr><td>\(C_4^2 = C_2\)</td><td>3</td><td>Same three axes, half-turn</td></tr>
+                <tr><td>\(C_3,\, C_3^2\)</td><td>8</td><td>Four \(C_3\) axes through opposite vertices (body diagonals)</td></tr>
+                <tr><td>\(C_2'\)</td><td>6</td><td>Six \(C_2\) axes through opposite edge midpoints</td></tr>
+            </tbody>
+        </table>
+        <p>Total rotations: \(1 + 6 + 3 + 8 + 6 = 24\). The full group O<sub>h</sub> adds 3 mirror planes \(\sigma_h\) (parallel to faces), 6 dihedral mirror planes \(\sigma_d\), and the centre of inversion \(i\), giving 48 elements.</p>
+
+        <h3 id="sym-dodeca">Dodecahedron / Icosahedron &mdash; I<sub>h</sub> (order 120)</h3>
+        <p>The dodecahedron and icosahedron are duals with symmetry group I<sub>h</sub>. The rotation subgroup I has order 60:</p>
+        <table>
+            <thead><tr><th>Operation</th><th>Count</th><th>Description</th></tr></thead>
+            <tbody>
+                <tr><td>\(E\)</td><td>1</td><td>Identity</td></tr>
+                <tr><td>\(C_5,\, C_5^2,\, C_5^3,\, C_5^4\)</td><td>24</td><td>Six \(C_5\) axes (face centres of dodecahedron / vertices of icosahedron)</td></tr>
+                <tr><td>\(C_3,\, C_3^2\)</td><td>20</td><td>Ten \(C_3\) axes (vertices of dodecahedron / face centres of icosahedron)</td></tr>
+                <tr><td>\(C_2\)</td><td>15</td><td>Fifteen \(C_2\) axes (edge midpoints)</td></tr>
+            </tbody>
+        </table>
+        <p>Total rotations: \(1 + 24 + 20 + 15 = 60\). The full I<sub>h</sub> includes 15 mirror planes and the centre of inversion, doubling to 120.</p>
+
+        <h3 id="sym-kp">Kepler-Poinsot Polyhedra</h3>
+        <p>All four Kepler-Poinsot polyhedra share the <strong>icosahedral symmetry group I<sub>h</sub></strong> (order 120). This is because they are obtained by stellation or facetting of the regular dodecahedron/icosahedron, processes that preserve the full symmetry of the parent solid.</p>
+        <ul>
+            <li><strong>Small stellated dodecahedron</strong> \(\{5/2,5\}\) and <strong>great dodecahedron</strong> \(\{5,5/2\}\) are duals of each other.</li>
+            <li><strong>Great stellated dodecahedron</strong> \(\{5/2,3\}\) and <strong>great icosahedron</strong> \(\{3,5/2\}\) are duals of each other.</li>
+        </ul>
+        <p>Their symmetry operations are identical to those of the dodecahedron/icosahedron listed above.</p>
+
+        <!-- ================================================================ -->
+        <!-- 4. Euler's Formula -->
+        <!-- ================================================================ -->
+        <h2 id="euler">4. Euler's Formula Verification</h2>
+
+        <h3>Convex polyhedra: \(V - E + F = 2\)</h3>
+        <table>
+            <thead><tr><th>Solid</th><th>\(V\)</th><th>\(E\)</th><th>\(F\)</th><th>\(V{-}E{+}F\)</th><th>&#10003;</th></tr></thead>
+            <tbody>
+                <tr><td>Tetrahedron</td><td>4</td><td>6</td><td>4</td><td>2</td><td>&#10003;</td></tr>
+                <tr><td>Cube</td><td>8</td><td>12</td><td>6</td><td>2</td><td>&#10003;</td></tr>
+                <tr><td>Octahedron</td><td>6</td><td>12</td><td>8</td><td>2</td><td>&#10003;</td></tr>
+                <tr><td>Dodecahedron</td><td>20</td><td>30</td><td>12</td><td>2</td><td>&#10003;</td></tr>
+                <tr><td>Icosahedron</td><td>12</td><td>30</td><td>20</td><td>2</td><td>&#10003;</td></tr>
+            </tbody>
+        </table>
+
+        <h3>Star polyhedra: density-modified Euler characteristic</h3>
+        <p>For non-convex regular polyhedra the na&iuml;ve count \(V - E + F\) no longer equals 2. The correct generalisation uses the <strong>density</strong> \(d\) of the polyhedron:</p>
+        <div class="math-block">
+        \[
+            V - E + F \;=\; 2d
+        \]
+        </div>
+        <p>More precisely, using the vertex-figure density \(d_v\) and face density \(d_f\):</p>
+        <div class="math-block">
+        \[
+            d_v\, V \;-\; E \;+\; d_f\, F \;=\; 2D
+        \]
+        </div>
+        <table>
+            <thead><tr><th>Solid</th><th>\(V\)</th><th>\(E\)</th><th>\(F\)</th><th>\(V{-}E{+}F\)</th><th>Density \(d\)</th></tr></thead>
+            <tbody>
+                <tr><td>Small stellated dodecahedron \(\{5/2,5\}\)</td><td>12</td><td>30</td><td>12</td><td>\(-6\)</td><td>3</td></tr>
+                <tr><td>Great dodecahedron \(\{5,5/2\}\)</td><td>12</td><td>30</td><td>12</td><td>\(-6\)</td><td>3</td></tr>
+                <tr><td>Great stellated dodecahedron \(\{5/2,3\}\)</td><td>20</td><td>30</td><td>12</td><td>2</td><td>7</td></tr>
+                <tr><td>Great icosahedron \(\{3,5/2\}\)</td><td>12</td><td>30</td><td>20</td><td>2</td><td>7</td></tr>
+            </tbody>
+        </table>
+        <p>For example, the small stellated dodecahedron has \(d_v = 1,\; d_f = 2,\; D = 3\):</p>
+        <div class="math-block">
+        \[
+            1 \cdot 12 \;-\; 30 \;+\; 2 \cdot 12 \;=\; 12 - 30 + 24 \;=\; 6 \;=\; 2 \times 3 \;\;\checkmark
+        \]
+        </div>
+
+        <!-- ================================================================ -->
+        <!-- 5. Vertex Coordinates -->
+        <!-- ================================================================ -->
+        <h2 id="coordinates">5. Vertex Coordinates</h2>
+
+        <p>All coordinates are given in a Cartesian frame centred at the origin. We write \(\varphi\) for the golden ratio:</p>
+        <div class="math-block">
+        \[
+            \varphi \;=\; \frac{1 + \sqrt{5}}{2} \;\approx\; 1.618
+        \]
+        </div>
+        <p>and note the useful identities \(\varphi^2 = \varphi + 1\) and \(1/\varphi = \varphi - 1\).</p>
+
+        <details>
+            <summary>&#9656; Tetrahedron</summary>
+            <div>
+                <p>4 vertices inscribed in a cube of side 2:</p>
+                <div class="math-block">\[ (1,1,1),\quad (1,-1,-1),\quad (-1,1,-1),\quad (-1,-1,1) \]</div>
+            </div>
+        </details>
+        <details>
+            <summary>&#9656; Cube</summary>
+            <div>
+                <p>8 vertices:</p>
+                <div class="math-block">\[ (\pm1,\;\pm1,\;\pm1) \]</div>
+            </div>
+        </details>
+        <details>
+            <summary>&#9656; Octahedron</summary>
+            <div>
+                <p>6 vertices &mdash; all permutations of:</p>
+                <div class="math-block">\[ (\pm1,\; 0,\; 0) \]</div>
+            </div>
+        </details>
+        <details>
+            <summary>&#9656; Dodecahedron</summary>
+            <div>
+                <p>20 vertices in three groups:</p>
+                <div class="math-block">\[ (\pm1,\;\pm1,\;\pm1) \]</div>
+                <div class="math-block">\[ (0,\;\pm1/\varphi,\;\pm\varphi),\quad (\pm1/\varphi,\;\pm\varphi,\;0),\quad (\pm\varphi,\;0,\;\pm1/\varphi) \]</div>
+            </div>
+        </details>
+        <details>
+            <summary>&#9656; Icosahedron</summary>
+            <div>
+                <p>12 vertices &mdash; cyclic permutations of:</p>
+                <div class="math-block">\[ (0,\;\pm1,\;\pm\varphi) \]</div>
+            </div>
+        </details>
+
+        <hr>
+        <p>Part of the <a href="../index.html" style="color:var(--accent);">Platonic Solids Visualizer</a> project.</p>
+    </main>
+</div>
+</body>
+</html>
